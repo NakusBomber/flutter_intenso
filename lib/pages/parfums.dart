@@ -15,6 +15,24 @@ class ParfumPage extends StatefulWidget {
 class _ParfumPageState extends State<ParfumPage> {
   
   @override
+  void initState() {
+    super.initState();
+    // DatabaseHelper.instance.create(const Parfum(
+    //     article: '2323232',
+    //     urlImage: 's',
+    //     title: 'test',
+    //     type: 'Женские',
+    //     price: 341.0,
+    //     url: 'a')
+    // );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const IntensoAppBar(titleText: "Духи"),
