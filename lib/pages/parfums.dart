@@ -15,7 +15,10 @@ class _ParfumPageState extends State<ParfumPage> {
   Card _getCardParfum(BuildContext context, List<Parfum> data, int index) {
     return Card(
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        color: Theme.of(context).primaryColor.withOpacity(0.8),
+        color: Theme
+            .of(context)
+            .primaryColor
+            .withOpacity(0.8),
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Flex(
@@ -66,11 +69,13 @@ class _ParfumPageState extends State<ParfumPage> {
                     children: [
                       Row(
                         children: [
-                          Text(data[index].title, style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
+                          Text(
+                            data[index].title,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
                           ),
                         ],
                       ),
@@ -78,17 +83,23 @@ class _ParfumPageState extends State<ParfumPage> {
                         children: [
                           Column(
                             children: [
-                              Text(data[index].type, style: const TextStyle(
-                                color: Colors.white,
-                              ),),
+                              Text(
+                                data[index].type,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                ),
+                              ),
                             ],
                           ),
                           const Spacer(),
                           Column(
                             children: [
-                              Text('${data[index].price.toInt()} ₴', style: const TextStyle(
-                                color: Colors.white,
-                              ),),
+                              Text(
+                                '${data[index].price.toInt()} ₴',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                ),
+                              ),
                             ],
                           ),
                         ],
@@ -102,32 +113,74 @@ class _ParfumPageState extends State<ParfumPage> {
         ));
   }
 
+  // Set<>
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const IntensoAppBar(titleText: "Духи"),
-      body: Center(
-        child: FutureBuilder<List<Parfum>>(
-          future: DatabaseHelper.instance.readAll(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const CircularProgressIndicator();
-            }
-            if (snapshot.hasError) {
-              return Text('Error: ${snapshot.error}');
-            }
-            final data = snapshot.data;
-            if (data == null || data.isEmpty) {
-              return const Text('Не найдено ни одних духов!');
-            }
-            return ListView.builder(
-              itemCount: data.length,
-              itemBuilder: (context, index) {
-                return _getCardParfum(context, data, index);
+      body: Flex(
+        direction: Axis.vertical,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                margin: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                child: Expanded(
+                    child: FilledButton.icon(
+                      icon: Icon(Icons.filter_alt),
+                      label: Text('Фильтр'),
+                      onPressed: () {
+                        showBottomSheet(
+                            context: context,
+                            builder: (context) => Text('dsdwsds')
+                        );
+                      },
+                    )
+                ),
+              ),
+              Container(
+              margin: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                child: Expanded(
+                    child: FilledButton.icon(
+                      icon: Icon(Icons.sort),
+                        label: Text('Сортировка'),
+                        onPressed: () {
+                          const SnackBar(
+                            content: Text('data'),
+                          );
+                        },
+                    )
+                ),
+              ),
+            ],
+          ),
+          Expanded(
+            flex: 11,
+            child: FutureBuilder<List<Parfum>>(
+              future: DatabaseHelper.instance.readAll(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
+                }
+                if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                }
+                final data = snapshot.data;
+                if (data == null || data.isEmpty) {
+                  return const Text('Не найдено ни одних духов!');
+                }
+                return ListView.builder(
+                  itemCount: data.length,
+                  itemBuilder: (context, index) {
+                    return _getCardParfum(context, data, index);
+                  },
+                );
               },
-            );
-          },
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }

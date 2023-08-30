@@ -164,51 +164,66 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Widget _getButton(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 5),
+      child: FilledButton(
+          onPressed: () {
+            Navigator.of(context).push(PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) =>
+                    const ParfumPage(),
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
+                  const begin = Offset(1.0, 0.0);
+                  const end = Offset.zero;
+                  const curve = Curves.fastOutSlowIn;
+
+                  var tween = Tween(begin: begin, end: end);
+                  var curvedAnimation =
+                      CurvedAnimation(parent: animation, curve: curve);
+
+                  return SlideTransition(
+                    position: tween.animate(curvedAnimation),
+                    child: child,
+                  );
+                },
+                transitionDuration: const Duration(milliseconds: 500)));
+          },
+          child: const Padding(
+            padding: EdgeInsets.symmetric(vertical: 10),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(left: 6),
+                  child: Text(
+                    'Духи',
+                    style: TextStyle(fontSize: 20),
+                  ),
+                ),
+                Icon(Icons.navigate_next,)
+              ],
+            ),
+          ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: const IntensoAppBar(titleText: "Главная"),
         body: SafeArea(
-          child: Column(
-            children: [
-              _getLogo(),
-              _getAnimDivider(),
-              _getAbout(context),
-              const SizedBox(
-                height: 30,
-              ),
-              _getContainerComment(),
-              const Spacer(),
-              _getOutlinedButton(context)
-            ],
-          ),
-        ));
+      child: Column(
+        children: [
+          _getLogo(),
+          _getAnimDivider(),
+          _getAbout(context),
+          _getContainerComment(),
+          const Spacer(),
+          _getButton(context)
+        ],
+      ),
+    ));
   }
 
-  OutlinedButton _getOutlinedButton(BuildContext context) {
-    return OutlinedButton(
-      onPressed: () {
-        Navigator.of(context).push(PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) =>
-                const ParfumPage(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-              const begin = Offset(1.0, 0.0);
-              const end = Offset.zero;
-              const curve = Curves.fastOutSlowIn;
-
-              var tween = Tween(begin: begin, end: end);
-              var curvedAnimation =
-                  CurvedAnimation(parent: animation, curve: curve);
-
-              return SlideTransition(
-                position: tween.animate(curvedAnimation),
-                child: child,
-              );
-            },
-            transitionDuration: const Duration(milliseconds: 500)));
-      },
-      child: Text('Перейти к духам'),
-    );
-  }
 }
