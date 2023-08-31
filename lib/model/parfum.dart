@@ -18,6 +18,27 @@ class ParfumFields {
   static const url = 'url';
 }
 
+enum ParfumTypes {
+  unisex,
+  man,
+  woman
+}
+
+extension ParfumTypesStringExtension on ParfumTypes {
+  String get name {
+    switch (this) {
+      case ParfumTypes.unisex:
+        return 'Унисекс';
+      case ParfumTypes.man:
+        return 'Мужские';
+      case ParfumTypes.woman:
+        return 'Женские';
+      default:
+        return '';
+    }
+  }
+}
+
 class Parfum {
   final int? id;
   final String article;
@@ -35,6 +56,7 @@ class Parfum {
       required this.type,
       required this.price,
       required this.url});
+
 
   Map<String, Object?> toJson() {
     return {

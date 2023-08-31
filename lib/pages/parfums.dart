@@ -12,13 +12,65 @@ class ParfumPage extends StatefulWidget {
 }
 
 class _ParfumPageState extends State<ParfumPage> {
+  Set<ParfumTypes> filters = <ParfumTypes>{
+    ParfumTypes.unisex,
+    ParfumTypes.man,
+    ParfumTypes.woman
+  };
+
+  SortingTypes sortType = SortingTypes.popular;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: const IntensoAppBar(titleText: "Каталог"),
+      body: SafeArea(
+        child: Flex(
+          direction: Axis.vertical,
+          children: [
+            _getTopButtons(context),
+            _getExpandedListParfums(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Row _getTopButtons(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+          child: Expanded(
+              child: FilledButton.icon(
+            icon: Icon(
+                filters.length < 3 ? Icons.filter_alt : Icons.filter_alt_off),
+            label: const Text('Фильтр'),
+            onPressed: () {
+              _getModalFilters(context);
+            },
+          )),
+        ),
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+          child: Expanded(
+              child: FilledButton.icon(
+            icon: const Icon(Icons.sort),
+            label: const Text('Сортировка'),
+            onPressed: () {
+              _getModalSorting(context);
+            },
+          )),
+        ),
+      ],
+    );
+  }
+
   Card _getCardParfum(BuildContext context, List<Parfum> data, int index) {
     return Card(
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        color: Theme
-            .of(context)
-            .primaryColor
-            .withOpacity(0.8),
+        color: Theme.of(context).primaryColor.withOpacity(0.8),
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Flex(
@@ -113,75 +165,129 @@ class _ParfumPageState extends State<ParfumPage> {
         ));
   }
 
-  // Set<>
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const IntensoAppBar(titleText: "Духи"),
-      body: Flex(
-        direction: Axis.vertical,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                margin: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                child: Expanded(
-                    child: FilledButton.icon(
-                      icon: Icon(Icons.filter_alt),
-                      label: Text('Фильтр'),
-                      onPressed: () {
-                        showBottomSheet(
-                            context: context,
-                            builder: (context) => Text('dsdwsds')
-                        );
-                      },
-                    )
-                ),
+  Expanded _getExpandedListParfums() {
+    return Expanded(
+      flex: 11,
+      child: FutureBuilder<List<Parfum>>(
+        future:
+            DatabaseHelper.instance.readSortedFromFilters(filters, sortType),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Text('Error: ${snapshot.error}');
+          }
+          final data = snapshot.data;
+          if (data == null || data.isEmpty) {
+            return const Center(
+                child: Text(
+              'Не найдено духов.\nВозможно, неверно указаны фильтры!',
+              style: TextStyle(
+                fontSize: 18,
               ),
-              Container(
-              margin: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                child: Expanded(
-                    child: FilledButton.icon(
-                      icon: Icon(Icons.sort),
-                        label: Text('Сортировка'),
-                        onPressed: () {
-                          const SnackBar(
-                            content: Text('data'),
-                          );
-                        },
-                    )
-                ),
-              ),
-            ],
-          ),
-          Expanded(
-            flex: 11,
-            child: FutureBuilder<List<Parfum>>(
-              future: DatabaseHelper.instance.readAll(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const CircularProgressIndicator();
-                }
-                if (snapshot.hasError) {
-                  return Text('Error: ${snapshot.error}');
-                }
-                final data = snapshot.data;
-                if (data == null || data.isEmpty) {
-                  return const Text('Не найдено ни одних духов!');
-                }
-                return ListView.builder(
-                  itemCount: data.length,
-                  itemBuilder: (context, index) {
-                    return _getCardParfum(context, data, index);
-                  },
-                );
-              },
-            ),
-          ),
-        ],
+              textAlign: TextAlign.center,
+            ));
+          }
+          return ListView.builder(
+            itemCount: data.length,
+            itemBuilder: (context, index) {
+              return _getCardParfum(context, data, index);
+            },
+          );
+        },
       ),
     );
+  }
+
+  Future<dynamic> _getModalFilters(BuildContext context) {
+    return showModalBottomSheet(
+        context: context,
+        builder: (context) => StatefulBuilder(
+              builder: (BuildContext context,
+                  void Function(void Function()) _setState) {
+                return SizedBox(
+                  height: 100,
+                  child: Column(
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Показать духи:',
+                              style: TextStyle(fontSize: 18),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Wrap(
+                          spacing: 6,
+                          children: ParfumTypes.values.map((ParfumTypes type) {
+                            return FilterChip(
+                                label: Text(type.name),
+                                selected: filters.contains(type),
+                                onSelected: (bool selected) {
+                                  setState(() {
+                                    _setState(() {
+                                      if (selected) {
+                                        filters.add(type);
+                                      } else {
+                                        filters.remove(type);
+                                      }
+                                    });
+                                  });
+                                });
+                          }).toList())
+                    ],
+                  ),
+                );
+              },
+            ));
+  }
+
+  Future<dynamic> _getModalSorting(BuildContext context) {
+    return showModalBottomSheet(
+        context: context,
+        builder: (context) => StatefulBuilder(
+              builder: (BuildContext context,
+                  void Function(void Function()) _setState) {
+                return SizedBox(
+                  height: 200,
+                  child: Column(
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Отсортировать по:',
+                              style: TextStyle(fontSize: 18),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Flex(
+                          direction: Axis.vertical,
+                          children:
+                              SortingTypes.values.map((SortingTypes type) {
+                                return ChoiceChip(
+                                  showCheckmark: false,
+                                  label: Text(type.name),
+                                  selected: true,
+                                  onSelected: (bool _) {
+                                    setState(() {
+                                      sortType = type;
+                                    });
+                                  },
+                            );
+                          }).toList())
+                    ],
+                  ),
+                );
+              },
+            ));
   }
 }

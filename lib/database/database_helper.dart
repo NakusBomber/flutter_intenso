@@ -5,6 +5,40 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
 
+enum SortingTypes {
+  popular,
+  price,
+  alphabet,
+}
+
+extension SortingTypesStringExtension on SortingTypes {
+  String get nameField {
+    switch(this) {
+      case SortingTypes.popular:
+        return ParfumFields.id;
+      case SortingTypes.alphabet:
+        return ParfumFields.title;
+      case SortingTypes.price:
+        return ParfumFields.price;
+      default:
+        return ParfumFields.id;
+    }
+  }
+
+  String get name {
+    switch (this) {
+      case SortingTypes.popular:
+        return 'Популярности';
+      case SortingTypes.alphabet:
+        return 'Алфавиту';
+      case SortingTypes.price:
+        return 'Повышению цены';
+      default:
+        return '';
+    }
+  }
+}
+
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static const String tableName = 'parfums';
@@ -81,6 +115,22 @@ class DatabaseHelper {
   Future<List<Parfum>> readAll() async {
     final db = await instance.database;
     final result = await db.query(tableName);
+
+    return result.map((json) => Parfum.fromJson(json)).toList();
+  }
+
+  Future<List<Parfum>> readSortedFromFilters(Set<ParfumTypes> filters, SortingTypes sortType) async {
+    List<String> values = filters.map((e) => e.name).toList();
+    final db = await instance.database;
+    String questionMarks = List.filled(values.length, '?').join(', ');
+
+    final result = await db.query(
+      tableName,
+      columns: ParfumFields.values,
+      where: '${ParfumFields.type} IN ($questionMarks)',
+      whereArgs: values,
+      orderBy: '${sortType.nameField} ASC',
+    );
 
     return result.map((json) => Parfum.fromJson(json)).toList();
   }
