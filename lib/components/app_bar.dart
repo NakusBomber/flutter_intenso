@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-class IntensoAppBar extends StatelessWidget implements PreferredSizeWidget {
+class IntensoDefaultAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   final String titleText;
 
-  const IntensoAppBar({
+  const IntensoDefaultAppBar({
     required this.titleText,
     super.key,
   });

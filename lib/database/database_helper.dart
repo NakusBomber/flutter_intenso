@@ -134,4 +134,22 @@ class DatabaseHelper {
 
     return result.map((json) => Parfum.fromJson(json)).toList();
   }
+
+  Future<List<Parfum>> searchSortedFromFilters(Set<ParfumTypes> filters, SortingTypes sortType, String searchQuery) async {
+    List<String> values = filters.map((e) => e.name).toList();
+    final db = await instance.database;
+    String questionMarks = List.filled(values.length, '?').join(', ');
+    final searchQueryUpper = searchQuery.toUpperCase();
+
+    final result = await db.query(
+      tableName,
+      columns: ParfumFields.values,
+      where: '${ParfumFields.type} IN ($questionMarks) AND ${ParfumFields.title} LIKE ?',
+      whereArgs: [...values, '%$searchQueryUpper%'],
+      orderBy: '${sortType.nameField} ASC',
+    );
+
+    return result.map((json) => Parfum.fromJson(json)).toList();
+  }
+
 }

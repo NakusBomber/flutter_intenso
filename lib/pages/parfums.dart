@@ -18,12 +18,15 @@ class _ParfumPageState extends State<ParfumPage> {
     ParfumTypes.woman
   };
 
+  bool _isSearch = false;
+  String _searchQuery = '';
+
   SortingTypes sortType = SortingTypes.popular;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const IntensoAppBar(titleText: "Каталог"),
+      appBar: _getAppBar(context),
       body: SafeArea(
         child: Flex(
           direction: Axis.vertical,
@@ -33,6 +36,60 @@ class _ParfumPageState extends State<ParfumPage> {
           ],
         ),
       ),
+    );
+  }
+
+  AppBar _getAppBar(BuildContext context) {
+    return AppBar(
+      backgroundColor: Theme.of(context).primaryColor,
+      iconTheme: const IconThemeData(
+        color: Colors.white
+      ),
+      title:
+        _isSearch
+        ? TextField(
+          onChanged: (query) {
+            setState(() {
+              _searchQuery = query;
+            });
+          },
+          autofocus: true,
+          style: const TextStyle(
+            color: Colors.white,
+            decorationThickness: 0
+          ),
+          cursorColor: Colors.white,
+          decoration: InputDecoration(
+            hintText: 'Пример: Mango skin',
+            hintStyle: TextStyle(
+              color: Colors.white.withOpacity(0.4)
+            )
+          ),
+        )
+        : const Text('Каталог', style: TextStyle(
+        color: Colors.white
+      )),
+      centerTitle: true,
+      actions: [
+        _isSearch
+        ? IconButton(
+        onPressed: () {
+          setState(() {
+            _isSearch = false;
+            _searchQuery = '';
+          });
+        },
+        icon: const Icon(Icons.clear)
+    )
+        : IconButton(
+          onPressed: () {
+            setState(() {
+              _isSearch = true;
+            });
+          },
+          icon: const Icon(Icons.search),
+        ),
+      ]
     );
   }
 
@@ -170,7 +227,9 @@ class _ParfumPageState extends State<ParfumPage> {
       flex: 11,
       child: FutureBuilder<List<Parfum>>(
         future:
-            DatabaseHelper.instance.readSortedFromFilters(filters, sortType),
+            _searchQuery == ''
+            ? DatabaseHelper.instance.readSortedFromFilters(filters, sortType)
+            : DatabaseHelper.instance.searchSortedFromFilters(filters, sortType, _searchQuery),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -181,13 +240,15 @@ class _ParfumPageState extends State<ParfumPage> {
           final data = snapshot.data;
           if (data == null || data.isEmpty) {
             return const Center(
-                child: Text(
-              'Не найдено духов.\nВозможно, неверно указаны фильтры!',
+                child: Flexible(
+                  child: Text(
+              'Не найдено духов. Возможно, неверно указаны фильтры или поиск!',
               style: TextStyle(
-                fontSize: 18,
+                  fontSize: 18,
               ),
               textAlign: TextAlign.center,
-            ));
+            ),
+                ));
           }
           return ListView.builder(
             itemCount: data.length,
