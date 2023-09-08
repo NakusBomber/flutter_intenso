@@ -13,7 +13,7 @@ enum SortingTypes {
 
 extension SortingTypesStringExtension on SortingTypes {
   String get nameField {
-    switch(this) {
+    switch (this) {
       case SortingTypes.popular:
         return ParfumFields.id;
       case SortingTypes.alphabet:
@@ -89,21 +89,60 @@ class DatabaseHelper {
     db.close();
   }
 
-  Future<Parfum> create(Parfum parfum) async {
+  Future<Parfum> insert(Parfum parfum) async {
     final db = await instance.database;
     final id = await db.insert(tableName, parfum.toJson());
 
     return parfum.copy(id: id);
   }
 
+  List<Object?> _getWhereArgs(
+    Set<ParfumTypes>? filters,
+    String? searchQuery,
+  ) {
+    List<String>? values = filters?.map((e) => e.name).toList();
+    List<Object?> whereArgs = [];
+    if (values != null) {
+      whereArgs.addAll([...values]);
+    }
+
+    if (searchQuery != null) {
+      final searchQueryUpper = searchQuery.toUpperCase();
+      whereArgs.add('%$searchQueryUpper%');
+    }
+    return whereArgs;
+  }
+
+  String? _getWhere(
+    Set<ParfumTypes>? filters,
+    String? searchQuery,
+  ) {
+    List<String>? values = filters?.map((e) => e.name).toList();
+    List<String> whereList = [];
+    String? where;
+
+    if (values != null) {
+      String questionMarks = List.filled(values.length, '?').join(', ');
+      whereList.add('${ParfumFields.type} IN ($questionMarks)');
+    }
+
+    if (searchQuery != null) {
+      whereList.add('${ParfumFields.title} LIKE ?');
+    }
+
+    if (whereList.isNotEmpty) {
+      where = whereList.join(' AND ');
+    }
+
+    return where;
+  }
+
   Future<Parfum> readId(int id) async {
     final db = await instance.database;
-    final maps = await db.query(
-        tableName,
+    final maps = await db.query(tableName,
         columns: ParfumFields.values,
         where: '${ParfumFields.id} = ?',
-        whereArgs: [id]
-    );
+        whereArgs: [id]);
 
     if (maps.isNotEmpty) {
       return Parfum.fromJson(maps.first);
@@ -119,37 +158,57 @@ class DatabaseHelper {
     return result.map((json) => Parfum.fromJson(json)).toList();
   }
 
-  Future<List<Parfum>> readSortedFromFilters(Set<ParfumTypes> filters, SortingTypes sortType) async {
-    List<String> values = filters.map((e) => e.name).toList();
+  Future<List<Parfum>> readWithOptions({
+    Set<ParfumTypes>? filters,
+    SortingTypes? sortType,
+    String? searchQuery,
+    int? limit,
+    int? offset,
+  }) async {
     final db = await instance.database;
-    String questionMarks = List.filled(values.length, '?').join(', ');
+    List<Object?> whereArgs = _getWhereArgs(filters, searchQuery);
+    String? where = _getWhere(filters, searchQuery);
+    String? sort;
+
+    if (sortType != null) {
+      sort = '${sortType.nameField} ASC';
+    }
 
     final result = await db.query(
       tableName,
       columns: ParfumFields.values,
-      where: '${ParfumFields.type} IN ($questionMarks)',
-      whereArgs: values,
-      orderBy: '${sortType.nameField} ASC',
+      where: where,
+      whereArgs: whereArgs,
+      orderBy: sort,
+      limit: limit,
+      offset: offset,
     );
 
     return result.map((json) => Parfum.fromJson(json)).toList();
   }
 
-  Future<List<Parfum>> searchSortedFromFilters(Set<ParfumTypes> filters, SortingTypes sortType, String searchQuery) async {
-    List<String> values = filters.map((e) => e.name).toList();
+  Future<int> getCountEntry({
+    Set<ParfumTypes>? filters,
+    String? searchQuery,
+  }) async {
+
     final db = await instance.database;
-    String questionMarks = List.filled(values.length, '?').join(', ');
-    final searchQueryUpper = searchQuery.toUpperCase();
+    final where = _getWhere(filters, searchQuery);
+    final whereArgs = _getWhereArgs(filters, searchQuery);
+    String query = '';
 
-    final result = await db.query(
-      tableName,
-      columns: ParfumFields.values,
-      where: '${ParfumFields.type} IN ($questionMarks) AND ${ParfumFields.title} LIKE ?',
-      whereArgs: [...values, '%$searchQueryUpper%'],
-      orderBy: '${sortType.nameField} ASC',
-    );
+    if (where != null && where.isNotEmpty) {
+      query = "WHERE $where";
+    }
 
-    return result.map((json) => Parfum.fromJson(json)).toList();
+    final result = Sqflite.firstIntValue(await db.rawQuery(
+      'SELECT COUNT(*) FROM $tableName $query',
+      whereArgs,
+    ));
+
+    if (result != null) {
+      return result;
+    }
+    return 0;
   }
-
 }
