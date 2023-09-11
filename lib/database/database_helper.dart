@@ -137,7 +137,7 @@ class DatabaseHelper {
     return where;
   }
 
-  Future<Parfum> readId(int id) async {
+  Future<Parfum?> readId(int id) async {
     final db = await instance.database;
     final maps = await db.query(tableName,
         columns: ParfumFields.values,
@@ -147,7 +147,7 @@ class DatabaseHelper {
     if (maps.isNotEmpty) {
       return Parfum.fromJson(maps.first);
     } else {
-      throw Exception('Id: $id not found!');
+      return null;
     }
   }
 

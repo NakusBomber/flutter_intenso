@@ -1,8 +1,10 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_intenso/components/app_bar.dart';
-import 'package:flutter_intenso/pages/parfums.dart';
+
+import 'package:flutter_intenso/components/dividers.dart';
+import 'package:flutter_intenso/components/logo.dart';
+import 'package:flutter_intenso/pages/parfum_catalog.dart';
+import 'package:flutter_intenso/utils/animations.dart';
+import '../utils/navigation.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,58 +16,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final String _textComment =
       'Ваш мир поделится на "ДО" и \n"ПОСЛЕ" с INTENSO PARFUM!';
-
-  Column _getLogo() {
-    return const Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'INTENSO',
-              style: TextStyle(
-                  fontFamily: "BlackerSans",
-                  fontWeight: FontWeight.w700,
-                  fontSize: 60),
-            ),
-          ],
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'PARFUM',
-              style: TextStyle(
-                  fontFamily: 'BlackerSans',
-                  fontWeight: FontWeight.w700,
-                  fontSize: 22),
-            )
-          ],
-        )
-      ],
-    );
-  }
-
-  Divider _getDivider() {
-    return const Divider(
-      height: 30,
-      indent: 20,
-      endIndent: 20,
-      color: Colors.black,
-      thickness: 2,
-    );
-  }
-
-  Widget _getAnimDivider() {
-    return TweenAnimationBuilder(
-        tween: Tween<double>(begin: 400, end: 0),
-        duration: const Duration(seconds: 1, milliseconds: 500),
-        builder: (BuildContext context, double value, Widget? child) {
-          return Padding(
-              padding: EdgeInsets.symmetric(horizontal: value),
-              child: _getDivider());
-        });
-  }
 
   Column _getAbout(BuildContext context) {
     return Column(
@@ -117,16 +67,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _getComment() {
-    return TweenAnimationBuilder(
-        tween: IntTween(begin: 0, end: _textComment.length),
-        duration: const Duration(seconds: 3),
-        builder: (BuildContext context, int value, Widget? child) {
-          int length = value;
-          return Text(_textComment.substring(0, length));
-        });
-  }
-
   Container _getContainerComment() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 10),
@@ -169,25 +109,7 @@ class _HomePageState extends State<HomePage> {
       margin: const EdgeInsets.only(bottom: 5),
       child: FilledButton(
           onPressed: () {
-            Navigator.of(context).push(PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) =>
-                    const ParfumPage(),
-                transitionsBuilder:
-                    (context, animation, secondaryAnimation, child) {
-                  const begin = Offset(1.0, 0.0);
-                  const end = Offset.zero;
-                  const curve = Curves.fastOutSlowIn;
-
-                  var tween = Tween(begin: begin, end: end);
-                  var curvedAnimation =
-                      CurvedAnimation(parent: animation, curve: curve);
-
-                  return SlideTransition(
-                    position: tween.animate(curvedAnimation),
-                    child: child,
-                  );
-                },
-                transitionDuration: const Duration(milliseconds: 500)));
+            Navigator.of(context).push(getPageRouteBuilder(const ParfumCatalog()));
           },
           child: const Padding(
             padding: EdgeInsets.symmetric(vertical: 10),
@@ -215,8 +137,8 @@ class _HomePageState extends State<HomePage> {
         body: SafeArea(
       child: Column(
         children: [
-          _getLogo(),
-          _getAnimDivider(),
+          logo,
+          animationDivider(dividerDefault),
           _getAbout(context),
           _getContainerComment(),
           const Spacer(),

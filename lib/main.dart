@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+
 import 'package:flutter_intenso/pages/home.dart';
-import 'package:flutter_intenso/pages/parfums.dart';
+import 'package:flutter_intenso/pages/parfum_catalog.dart';
 
 void main() => runApp(const IntensoApp());
 
@@ -18,7 +19,7 @@ class IntensoApp extends StatelessWidget {
       ),
       home: const HomePage(),
       routes: {
-        '/parfums': (context) => const ParfumPage()
+        '/parfums': (context) => const ParfumCatalog()
       },
     );
   }
